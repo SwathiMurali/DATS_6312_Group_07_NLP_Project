@@ -194,3 +194,60 @@ print(f"Total translated rows: {translated_rows}")
 
 #%%
 '''
+
+import pandas as pd
+df_summary=pd.read_csv('/home/ubuntu/finalproject/Data/df_preprocess_mj.csv')
+#%%
+df_summary.head()
+
+#%%
+import pandas as pd
+
+# Assuming df_summary is your original DataFrame
+
+
+#%%
+print
+#%%
+
+# Unique values and their counts for 'public response' column
+response_counts = df_summary['Company public response'].value_counts()
+
+
+
+print("\nUnique values in 'public response' and their counts:")
+print(response_counts)
+
+
+#%%
+# Define the number of records to keep
+n_records = 10000
+
+# Filter 20k records for each specified value
+subset1 = df_summary[df_summary['Company public response'] == "Company has responded to the consumer and the CFPB and chooses not to provide a public response"].sample(n=n_records, random_state=42)
+subset2 = df_summary[df_summary['Company public response'] == "No Public Response"].sample(n=n_records, random_state=42)
+subset3 = df_summary[df_summary['Company public response'] == "Company believes it acted appropriately as authorized by contract or law"].sample(n=n_records, random_state=42)
+
+# Keep the rest of the records intact
+remaining_records = df_summary[~df_summary['Company public response'].isin([
+    "Company has responded to the consumer and the CFPB and chooses not to provide a public response",
+    "No Public Response",
+    "Company believes it acted appropriately as authorized by contract or law"
+])]
+
+# Concatenate all subsets to form the final DataFrame
+final_df = pd.concat([subset1, subset2, subset3, remaining_records], ignore_index=True)
+
+# Display the result
+print(f"Total records in the final DataFrame: {len(final_df)}")
+
+#%%
+response_counts = final_df['Company public response'].value_counts()
+
+
+
+print("\nUnique values in 'public response' and their counts:")
+print(response_counts)
+
+#%%
+final_df.to_csv('final_output.csv', index=False)
