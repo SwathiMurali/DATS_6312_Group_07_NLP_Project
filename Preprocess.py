@@ -1,15 +1,13 @@
-#%%
 
-import pandas as pd
-#from deep_translator import GoogleTranslator
 #%%
-# Load your dataset
+'''Loaded dataset from an other file which was generated from data_inspection_EDA.ipynb'''
 trans_data = pd.read_csv("/home/ubuntu/finalproject/Data/df_cleaned_preprocessed.csv")
 #%%
 
-# Display the first few rows to verify data loading
 trans_data.head()
 #%%
+
+'''Removing null values'''
 null_count = trans_data['Processed Narrative'].isna().sum()
 
 print(f"Number of null values in 'Processed Narrative': {null_count}")
@@ -18,26 +16,7 @@ print(f"Number of null values in 'Processed Narrative': {null_count}")
 # Remove rows where 'Processed Narrative' column has NaN values
 trans_data = trans_data.dropna(subset=['Processed Narrative'])
 
-#%%
 
-count_long_texts = trans_data['Processed Narrative'].apply(len).gt(4000).sum()
-print(f"Number of rows with more than 4000 characters in 'Processed Narrative': {count_long_texts}")
-
-#%%
-count_long_texts2 = trans_data['Processed Narrative'].apply(len).gt(5000).sum()
-print(f"Number of rows with more than 5000 characters in 'Processed Narrative': {count_long_texts2}")
-
-#%%
-count_long_texts3 = trans_data['Processed Narrative'].apply(len).gt(2000).sum()
-print(f"Number of rows with more than 2000 characters in 'Processed Narrative': {count_long_texts3}")
-
-#%%
-trans_data['word_count'] = trans_data['Processed Narrative'].apply(lambda x: len(str(x).split()))
-
-# Get the distribution of word counts
-word_count_distribution = trans_data['word_count'].describe()
-
-print(word_count_distribution)
 #%%
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -73,7 +52,7 @@ plt.gca().yaxis.set_major_formatter(formatter)
 
 plt.show()
 
-
+'''Some EDA on Counting words in each narrative'''
 #%%
 
 
@@ -107,10 +86,6 @@ def clean_text(text):
     # Remove 'xxxx' patterns
     text = re.sub(r'\b[x]{2,}\b', '', text)
     
-    # Optional: Remove other unwanted characters (e.g., URLs, HTML tags, etc.)
-    # text = re.sub(r'http\S+', '', text)  # Remove URLs if needed
-    # text = re.sub(r'<.*?>', '', text)    # Remove HTML tags if needed
-    
     return text
 
 
@@ -138,76 +113,14 @@ trans_data_cleaned = trans_data.dropna()
 # Save the cleaned DataFrame to a CSV file
 trans_data_cleaned.to_csv('df_preprocess_mj.csv', index=False)
 
-#%%
-'''
-# Function to translate a batch of text to Spanish
-def translate_batch_to_spanish(text_batch):
-    try:
-        # Translate each entry in the batch
-        translations = [GoogleTranslator(source="auto", target="es").translate(text) for text in text_batch]
-        return translations
-    except Exception as e:
-        print(f"Error translating batch: {e}")
-        return [text for text in text_batch]  # Return original text in case of an error
-
-#%%
-# Function to apply translation in batches
-def batch_process_translation(data, batch_size=100000):
-    # List to store translated results
-    translated_results = []
-    
-    # Process data in batches
-    for start in range(0, len(data), batch_size):
-        end = min(start + batch_size, len(data))  # End of the current batch
-        batch = data[start:end]
-        translated_batch = translate_batch_to_spanish(batch)  # Translate the batch
-        translated_results.extend(translated_batch)  # Add translated batch to results
-
-        # Print progress every 10,000 rows
-        if (start // batch_size) % 10000 == 0:
-            print(f"Processed {start + batch_size} rows out of {len(data)}")
-
-    return translated_results
-
-# Get the "Processed Narrative" column for translation
-narrative_column = trans_data['Processed Narrative'].tolist()
-
-# Translate in batches
-translated_narratives = batch_process_translation(narrative_column)
-
-# Add the translated column to the dataframe
-trans_data['Espanol'] = translated_narratives
-
-# Save the updated dataset
-trans_data.to_csv("/home/ubuntu/finalproject/Data/df_translated_batch.csv", index=False)
-
-# Display the first few rows of the updated dataset
-print(trans_data.head())
-
-# Print a message to confirm that the translation is complete
-print("Translation completed and saved to 'df_translated_batch.csv'.")
-
-#%%
-# Track the number of successfully translated rows
-translated_rows = trans_data['Espanol'].notna().sum()
-print(f"Total translated rows: {translated_rows}")
-
-#%%
-'''
 
 import pandas as pd
 df_summary=pd.read_csv('/home/ubuntu/finalproject/Data/df_preprocess_mj.csv')
 #%%
 df_summary.head()
 
-#%%
-import pandas as pd
 
-# Assuming df_summary is your original DataFrame
-
-
-#%%
-print
+"Let's clean the data and reduce the size, Since it taking long time to train my translation model"
 #%%
 
 # Unique values and their counts for 'public response' column
