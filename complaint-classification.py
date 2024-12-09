@@ -1,6 +1,6 @@
 import torch
 from torch.utils.data import Dataset, DataLoader
-from transformers import RobertaTokenizer, RobertaForSequenceClassification, AdamW
+from transformers import DistilBertTokenizer, DistilBertForSequenceClassification, AdamW
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, confusion_matrix, top_k_accuracy_score
 import pandas as pd
@@ -55,7 +55,7 @@ print("Target names:", target_names)
 train_data, test_data = train_test_split(df, test_size=0.2, stratify=df["Issue"], random_state=42)
 
 # Tokenizer and Dataset
-tokenizer = RobertaTokenizer.from_pretrained("roberta-base")
+tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
 train_dataset = ComplaintDataset(train_data, tokenizer, max_len=128)
 test_dataset = ComplaintDataset(test_data, tokenizer, max_len=128)
 
@@ -65,17 +65,16 @@ test_loader = DataLoader(test_dataset, batch_size=16)
 
 # Model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = RobertaForSequenceClassification.from_pretrained("roberta-base", num_labels=len(df["Issue"].unique()))
+model = DistilBertForSequenceClassification.from_pretrained("distilbert-base-uncased", num_labels=len(df["Issue"].unique()))
 model.to(device)
 
 # Optimizer and Scheduler
 optimizer = AdamW(model.parameters(), lr=2e-5)
 scheduler = ReduceLROnPlateau(optimizer, mode="min", patience=1, factor=0.5)
 
-
 # Training function with Early Stopping
 def train_model_with_early_stopping(
-    model, train_loader, test_loader, optimizer, device, num_epochs=10, patience=2, save_path="/home/ubuntu/NLP/roberta_model.pth"
+    model, train_loader, test_loader, optimizer, device, num_epochs=10, patience=2, save_path="/home/ubuntu/NLP/distilbert_model.pth"
 ):
     model.train()
     best_loss = float("inf")
@@ -159,8 +158,8 @@ def evaluate_model_with_metrics(model, test_loader, device, k=3):
     return all_preds, all_labels, all_logits
 
 
-if os.path.exists("/home/ubuntu/NLP/roberta_model.pth"):
-    model.load_state_dict(torch.load("/home/ubuntu/NLP/roberta_model.pth"))
+if os.path.exists("/home/ubuntu/NLP/distilbert_model.pth"):
+    model.load_state_dict(torch.load("/home/ubuntu/NLP/distilbert_model.pth"))
     print("Model loaded successfully.")
 else:
     train_model_with_early_stopping(model, train_loader, test_loader, optimizer, device)
