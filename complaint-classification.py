@@ -1,6 +1,6 @@
 import torch
 from torch.utils.data import Dataset, DataLoader
-from transformers import XLMRobertaTokenizer, XLMRobertaForSequenceClassification, AdamW
+from transformers import DistilBertTokenizer, DistilBertForSequenceClassification, AdamW, get_linear_schedule_with_warmup
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, confusion_matrix, top_k_accuracy_score
 import pandas as pd
@@ -35,7 +35,6 @@ class ComplaintDataset(Dataset):
         }
         return data
 
-
 # Load and preprocess data
 df = pd.read_csv("/home/ubuntu/NLP/final_df.csv")
 df = df[df["Issue"].map(df["Issue"].value_counts()) > 5]  # Filter rare classes
@@ -48,7 +47,7 @@ class_weights = torch.tensor(1 / df["Issue"].value_counts(normalize=True).values
 train_data, test_data = train_test_split(df, test_size=0.2, stratify=df["Issue"], random_state=42)
 
 # Tokenizer and Dataset
-tokenizer = XLMRobertaTokenizer.from_pretrained("xlm-roberta-base")
+tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
 train_dataset = ComplaintDataset(train_data, tokenizer, max_len=128)
 test_dataset = ComplaintDataset(test_data, tokenizer, max_len=128)
 
@@ -56,9 +55,10 @@ test_dataset = ComplaintDataset(test_data, tokenizer, max_len=128)
 train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=16)
 
-# Model
+# Load DistilBERT model and checkpoint
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = XLMRobertaForSequenceClassification.from_pretrained("xlm-roberta-base", num_labels=len(df["Issue"].unique()))
+model = DistilBertForSequenceClassification.from_pretrained("distilbert-base-uncased", num_labels=len(df["Issue"].unique()))
+model.load_state_dict(torch.load("distilbert_model.pth"))  # Load the checkpoint
 model.to(device)
 
 # Optimizer and Scheduler
@@ -67,7 +67,7 @@ scheduler = ReduceLROnPlateau(optimizer, mode="min", patience=1, factor=0.5)
 
 # Training function with Early Stopping
 def train_model_with_early_stopping(
-    model, train_loader, test_loader, optimizer, device, num_epochs=10, patience=2, save_path="/home/ubuntu/NLP/xlm_roberta_model.pth"
+    model, train_loader, test_loader, optimizer, device, num_epochs=10, patience=2, save_path="/home/ubuntu/NLP/distilbert_model.pth"
 ):
     model.train()
     best_loss = float("inf")
