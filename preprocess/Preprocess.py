@@ -164,3 +164,7 @@ print(response_counts)
 
 #%%
 final_df.to_csv('final_output.csv', index=False)
+
+'''
+Summarized the columns to check if my classification is better working with the Consumer Narrative or Summary of Consumer Narrative
+'''
