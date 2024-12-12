@@ -1,10 +1,9 @@
 import torch
 from torch.utils.data import Dataset, DataLoader
-from transformers import DistilBertTokenizer, DistilBertForSequenceClassification, AdamW
+from transformers import DistilBertTokenizer, DistilBertForSequenceClassification, AdamW, get_linear_schedule_with_warmup
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, confusion_matrix, top_k_accuracy_score
 import pandas as pd
-import os
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 # Dataset class
@@ -36,20 +35,13 @@ class ComplaintDataset(Dataset):
         }
         return data
 
-
 # Load and preprocess data
 df = pd.read_csv("/home/ubuntu/NLP/final_df.csv")
-print(f"Original dataset size: {len(df)}")
 df = df[df["Issue"].map(df["Issue"].value_counts()) > 5]  # Filter rare classes
-print(f"Filtered dataset size: {len(df)}")
 df["Issue"] = df["Issue"].astype("category").cat.codes
 
 # Compute class weights
 class_weights = torch.tensor(1 / df["Issue"].value_counts(normalize=True).values, dtype=torch.float32)
-
-# Verify target names
-target_names = list(df["Issue"].astype("category").cat.categories.astype(str))
-print("Target names:", target_names)
 
 # Split data
 train_data, test_data = train_test_split(df, test_size=0.2, stratify=df["Issue"], random_state=42)
@@ -63,9 +55,10 @@ test_dataset = ComplaintDataset(test_data, tokenizer, max_len=128)
 train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=16)
 
-# Model
+# Load DistilBERT model and checkpoint
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = DistilBertForSequenceClassification.from_pretrained("distilbert-base-uncased", num_labels=len(df["Issue"].unique()))
+model.load_state_dict(torch.load("distilbert_model.pth"))  # Load the checkpoint
 model.to(device)
 
 # Optimizer and Scheduler
@@ -123,7 +116,6 @@ def train_model_with_early_stopping(
             print("Early stopping triggered.")
             break
 
-
 # Evaluation function
 def evaluate_model_with_metrics(model, test_loader, device, k=3):
     model.eval()
@@ -145,7 +137,7 @@ def evaluate_model_with_metrics(model, test_loader, device, k=3):
             all_logits.extend(logits.cpu().numpy())
 
     print("Classification Report:")
-    print(classification_report(all_labels, all_preds, target_names=target_names))
+    print(classification_report(all_labels, all_preds, target_names=list(df["Issue"].astype("category").cat.categories.astype(str))))
 
     if k > 1:
         top_k_acc = top_k_accuracy_score(all_labels, all_logits, k=k)
@@ -158,10 +150,5 @@ def evaluate_model_with_metrics(model, test_loader, device, k=3):
     return all_preds, all_labels, all_logits
 
 
-if os.path.exists("/home/ubuntu/NLP/distilbert_model.pth"):
-    model.load_state_dict(torch.load("/home/ubuntu/NLP/distilbert_model.pth"))
-    print("Model loaded successfully.")
-else:
-    train_model_with_early_stopping(model, train_loader, test_loader, optimizer, device)
-
-all_preds, all_labels, all_logits = evaluate_model_with_metrics(model, test_loader, device, k=3)
+# Start Training
+train_model_with_early_stopping(model, train_loader, test_loader, optimizer, device)
