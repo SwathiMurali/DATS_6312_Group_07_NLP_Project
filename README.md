@@ -20,8 +20,9 @@ Consumer Complaint Database - https://www.consumerfinance.gov/data-research/cons
 ## Models Used:
 1. DistilBERT
 2. RoBERTa
-3. T5-Small
-4. BART-Large-CNN
+3. bert-base-uncased
+4. T5-Small
+5. BART-Large-CNN
 
 ## Framework and Libraries:
 1. PyTorch
@@ -40,7 +41,7 @@ Handle missing data and imbalanced classes using sampling techniques.
 Core Tasks and Models
 
 2. Complaint Classification:
-Classifies consumer complaints into predefined categories using models like DistilBERT and RoBERTa.
+Classifies consumer complaints into predefined categories using models like DistilBERT and RoBERTa. 
 
 3. Summarization:
 Summarizes lengthy complaint narratives using BART and T5 models.
@@ -50,16 +51,21 @@ Identifies sentiment (positive, neutral, negative) using fine-tuned BERT-based m
 Company Response Classification:
 Assesses response timeliness and relevance using models like DistilBERT.
 
-5. Model Training and Tuning: 
+5. Company Response to Customers
+Predicts company consumer reponse based on comaplint narratives
+
+6. Model Training and Tuning: 
 Models are fine-tuned on labeled datasets with a focus on accuracy, F1-score, and ROUGE scores.
 Techniques such as cross-validation, weighted loss functions, and learning rate scheduling ensure robust performance.
 
-6. Evaluation and Deployment: 
+7. Evaluation and Deployment: 
 Each model's output is evaluated against test data using relevant metrics (e.g., F1-score, ROUGE).
-Deployed models predict complaint categories, summarize narratives, and analyze sentiments in real-time
+Deployed models predict complaint categories, summarize narratives, and analyze sentiments in real-time.
 
 
-## Results:
+
+
+
 
 
 
